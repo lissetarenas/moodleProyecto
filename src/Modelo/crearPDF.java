@@ -153,8 +153,8 @@ public class crearPDF extends javax.swing.JFrame {
       //  JOptionPane.showMessageDialog(null, "ingresado correctamente");
         switch(tabla){
             case "documentos":
-                 stmnt.executeUpdate("insert into documentos (id, nombre, tipo, fecha, hora) "
-                + "values('" +id + "','"+nombre+"', '"+tipo+ "', '"+dia+"','"+ hora +"');");
+                 stmnt.execute("insert into documentos (id, nombre, fecha, hora) "
+                + "values('" +id + "','"+nombre+"', '"+dia+"','"+ hora +"');");
                 break;
             case "tareas":
                  Tarea aux= new Tarea();

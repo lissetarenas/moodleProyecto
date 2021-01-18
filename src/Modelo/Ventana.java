@@ -1,21 +1,11 @@
 import com.itextpdf.text.DocumentException;
 import java.awt.Color;
+import java.awt.Desktop;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
-import org.apache.pdfbox.pdmodel.PDAppearanceContentStream;
+
 import java.awt.Image;
-import java.awt.List;
-import java.awt.print.PageFormat;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -27,15 +17,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import javax.swing.text.Document;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -54,22 +43,22 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
  * @author porta
  */
 public class Ventana extends javax.swing.JFrame {
-    
-     String  name, date, hour;
-     int fila, colum;
-     int opc, materia;
-     String row, columna;
-     String tabla;
-     int id;
-     String numero, id_tabla;
-     
-     FileNameExtensionFilter filtro= new FileNameExtensionFilter( "Archivos pdf y word" ,"pdf", "docx");
-     
      private static Connection con= null;
+     Statement stmnt = null;
      private static String driver="org.postgresql.Driver";
      private static String pwd="1234";
      private static String usuario="postgres";
      private static String url="jdbc:postgresql://localhost:5432/postgres";
+     String  name, date, hour;
+     int fila, colum;
+     int opc, materia;
+     String tabla, nombre;
+     int id;
+     String numero, id_tabla;
+     
+     FileNameExtensionFilter filtro= new FileNameExtensionFilter( "PDF, WORD" ,"pdf", "docx");
+     
+    
 
     /**
      * Creates new form Ventana
@@ -133,7 +122,7 @@ public class Ventana extends javax.swing.JFrame {
         });
 
         jLabel3.setFont(new java.awt.Font("Verdana", 0, 12)); // NOI18N
-        jLabel3.setText("Julian Lopez ");
+        jLabel3.setText("Julian Perez ");
 
         jLabel4.setFont(new java.awt.Font("Verdana", 3, 12)); // NOI18N
         jLabel4.setText("Tabla: ");
@@ -359,8 +348,7 @@ public class Ventana extends javax.swing.JFrame {
     }//GEN-LAST:event_btnEditarActionPerformed
 
     private void jTableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableMousePressed
-        // TODO add your handling code here:
-       
+     
     }//GEN-LAST:event_jTableMousePressed
    public void asignarTabla(){
         numero = (String)jTable.getValueAt(jTable.getSelectedRow(), 0);
@@ -383,13 +371,17 @@ public class Ventana extends javax.swing.JFrame {
     }
     private void btnSubirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubirActionPerformed
         // TODO add your handling code here:
-        String nombre;
-        
+      
+        if (jComboBox1.getSelectedIndex()  <= 0)
+        {
+           JOptionPane.showMessageDialog(rootPane,"No has seleccionado un curso");
+        }else{        
             JFileChooser fcho= new JFileChooser();
             fcho.setFileFilter(filtro);
             int opc= fcho.showOpenDialog(this);
             if (opc == JFileChooser.APPROVE_OPTION){
                 nombre= fcho.getSelectedFile().getName();
+                //ruta = fcho.getSelectedFile().getPath();
                 
                 switch (tabla){
                     case "documentos":
@@ -400,13 +392,13 @@ public class Ventana extends javax.swing.JFrame {
                         Tarea aux = new Tarea();
                         aux.setVisible(true);
                         aux.guardar(nombre,asignarID() );
-                         System.out.print("NOMBRE ARCHIVO:"+ nombre+ "ID:"+asignarID());
+                        
                         break;
                         
                 }
                 
              }
-        
+        }
     }//GEN-LAST:event_btnSubirActionPerformed
 
     
@@ -415,9 +407,7 @@ public class Ventana extends javax.swing.JFrame {
        
         
         try {
-             // TODO add your handling code here:
-             Connection con=null;
-             Statement stmnt = null;
+             
              Class.forName(driver);
              con = DriverManager.getConnection(url, usuario, pwd);
              stmnt = con.createStatement();
@@ -440,12 +430,8 @@ public class Ventana extends javax.swing.JFrame {
     }//GEN-LAST:event_btnEliminarActionPerformed
     
     public void insertar (  String nombre) {
-       
-        id= jComboBox1.getSelectedIndex();
-        if(id==0){id = 3299; }else { id= 3300;}
-      Connection con=null;
-      Statement stmnt = null;  
-    
+      
+     
       String sql=null;
       Date fecha = new Date();
       DateFormat hora= new SimpleDateFormat("hh:mm");
@@ -454,21 +440,20 @@ public class Ventana extends javax.swing.JFrame {
      
         //tsbla solo sera ip o so 
        
-        Class.forName("org.postgresql.Driver");
-        con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "1234");
+        Class.forName(driver);
+        con = DriverManager.getConnection(url, usuario, pwd);
         stmnt = con.createStatement();
         
-        stmnt.executeUpdate("insert into documentos (id, nombre, fecha, hora)"
-                + " values('"+this.id+ "','"+nombre+ "','"+ dF.format(fecha)+"', '" + hora.format(fecha)+"');");
-        stmnt.close();
-            
+        stmnt.executeQuery("insert into documentos (id, nombre, fecha, hora)"
+                + " values('"+this.asignarID()+ "','"+nombre+ "','"+ dF.format(fecha)+"', '" + hora.format(fecha)+"');");
+        stmnt.close();    
         con.close();
        
-    }  catch (ClassNotFoundException ex) {      
+     }  catch (ClassNotFoundException ex) {      
                 Logger.getLogger(crearPDF.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (SQLException ex) {
+     } catch (SQLException ex) {
                 Logger.getLogger(crearPDF.class.getName()).log(Level.SEVERE, null, ex);
-            }      
+    }      
        
 
       
@@ -570,7 +555,7 @@ public class Ventana extends javax.swing.JFrame {
             Class.forName(driver);
             con = DriverManager.getConnection(url, usuario, pwd);
             Statement sta= con.createStatement();
-            sql= "Select *from "+tabla +" WHERE "+id+"="+fk;
+            sql= "Select *from "+tabla +" WHERE "+id+"="+fk+" order by fecha;";
             ResultSet rs= sta.executeQuery(sql);
             ResultSetMetaData rmd= rs.getMetaData();
             
@@ -580,6 +565,7 @@ public class Ventana extends javax.swing.JFrame {
             String []documentos = new String[5];
             String [] tareas= new String [7];
            
+            
              switch (tabla){
                  case "documentos":
                     while (rs.next()){
@@ -587,6 +573,7 @@ public class Ventana extends javax.swing.JFrame {
                     documentos[1]= rs.getString("nombre");
                     documentos[2]=rs.getString("fecha");
                     documentos[3]= rs.getString("hora");
+                    jTable.setRowSorter(new TableRowSorter(modelo));
                     modelo.addRow(documentos);
                 }
                      break;
@@ -606,7 +593,7 @@ public class Ventana extends javax.swing.JFrame {
                     tareas[3]= rs.getString("nombre");
                     tareas[4]= rs.getString("hora_entrega");
                     tareas[5]= rs.getString("fecha_entrega");
-
+                     jTable.setRowSorter(new TableRowSorter(model_tareas));
                     model_tareas.addRow(tareas);
                  }
                      break;
